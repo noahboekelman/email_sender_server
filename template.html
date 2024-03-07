@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Word of the Day</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif;
+            background-color: white;
+        }
+        .container {
+            align-items: center;
+            width: 90%;
+            margin: 10px;
+            background-color: white;
+        }
+        .header {
+            padding: 10px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+            text-align: center;
+        }
+        .footer {
+            width: 100%;
+            background-color: white;
+            padding: 10px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>Discover the Word of the Day!</h1>
+            </div>
+        </div>
+        <div class="content">
+            <h2>{{word}}</h2>
+            <p>{{description}}</p>
+            <ul>
+                {{listItems}}
+            </ul>
+        </div>
+        <div class="footer">
+            <p>&copy; Your Daily Word Generator</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# local env files
+.env*
+
+# node modules
+node_modules
+
+# datasets
+usedWords.json
+list.json
