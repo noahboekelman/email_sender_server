@@ -126,7 +126,7 @@ const sendEmails = (args) => {
 
     const mailOptions = {
       from: {
-        name: "Noah's Daily Email Service",
+        name: "Noah's Daily Word Service",
         address: senderEmail,
       },
       to: email,
