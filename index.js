@@ -186,7 +186,7 @@ const runJob = async () => {
 };
 
 // the listener mainly triggers jobs and provides logs
-app.listen(3001, () => {
+app.listen(3100, () => {
   console.log("Server started!");
   runJob();
 });
