@@ -7,6 +7,16 @@ import express from "express";
 import fs from "fs";
 import OpenAI from "openai";
 
+const dayStrings = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
 // loading env variables
 dotenv.config();
 const senderEmail = process.env.SENDER_EMAIL;
@@ -24,9 +34,8 @@ const openai = new OpenAI({
 
 const app = express();
 
-// adds environment variable instructions and used words as instructions
-// response logic is in env and usedWords is used for the agent to not repeat words
-const instructions = `${envInstructions} ${usedWords.toString()}`;
+// adds environment variable instructions
+const instructions = envInstructions;
 
 const tools = [
   {
@@ -40,16 +49,19 @@ const tools = [
         properties: {
           wordOfTheDay: {
             type: "string",
-            description: `This is the word of the day, with the first letter capitalized and the word WILL NOT BE THE SAME WORD AS A WORD IN THE LIST: ${usedWords.toString()}`,
+            description: `This is the word of the day. THE WORD WILL NOT BE THE SAME WORD AS A WORD IN THE LIST: ${usedWords.toString()}`,
           },
           wordDescription: {
             type: "string",
-            description: "A description of what the word means",
+            description: "An informative description of what the word means.",
           },
           exampleSentences: {
-            type: "string",
+            type: "array",
             description:
-              "A string of 3 example sentences where the word of the day is used, separated by a dot",
+              "An array of 3 example sentences using the word of the day",
+              items: {
+                type: "string"
+              }
           },
         },
         required: ["wordOfTheDay", "wordDescription", "exampleSentences"],
@@ -68,9 +80,8 @@ const messages = [
 const queryAgent = async () => {
   const completion = await openai.chat.completions.create({
     messages: messages,
-    model: "gpt-4-1106-preview",
+    model: "gpt-3.5-turbo-1106", // $1/1M tokens instead of $10/1M tokens
     max_tokens: 200,
-    response_format: { type: "json_object" },
     tools: tools,
   });
   if (completion.choices[0].message.tool_calls)
@@ -80,18 +91,27 @@ const queryAgent = async () => {
 
 // sends emails to each email in list.json
 const sendEmails = (args) => {
-  // capitalizes the first letter of the word of the day
-  const wordArr = args.wordOfTheDay.split("");
-  const capitalizedWord = wordArr[0].toUpperCase() + wordArr.slice(1).join("");
-  // splits the args example sentences string
-  const splitSentencesArr = args.exampleSentences.split(". ");
-  // returns array with html content
-  const listHtml = splitSentencesArr.map((sentence) => `<li>${sentence}</li>`);
+  // checks the args
+  // args.exampleSentences is now an array of sentence strings
+  if (!args.wordOfTheDay || args.wordOfTheDay.length <= 0
+    || !args.exampleSentences || args.exampleSentences.length <= 0
+    || !args.wordDescription || args.wordDescription.length <= 0) {
+      return;
+    }
+    const dayInt = new Date().getDay();
+    const dayString = dayStrings[dayInt];
+    // capitalizes the first letter of the word of the day
+    const wordArr = args.wordOfTheDay.split("");
+    const capitalizedWord = wordArr[0].toUpperCase() + wordArr.slice(1).join("");
+    // capitalizes the description
+    const capitalizedDescription = args.wordDescription.charAt(0).toUpperCase() + args.wordDescription.slice(1);
+    // returns array with html content
+    const listHtml = args.exampleSentences.map((sentence) => `<li>${sentence}</li>`);
 
   // replaces the placeholders in the html file string
   let emailHTML = template
     .replace("{{word}}", capitalizedWord)
-    .replace("{{description}}", args.wordDescription)
+    .replace("{{description}}", capitalizedDescription)
     .replace("{{listItems}}", listHtml.join(" "));
 
   // iterates through the email list
@@ -110,27 +130,27 @@ const sendEmails = (args) => {
         address: senderEmail,
       },
       to: email,
-      subject: "Another day, another word",
+      subject: `${dayString}'s word of the day`,
       html: emailHTML,
     };
 
     transporter.sendMail(mailOptions, function (error, info) {
-      console.log("MailOptions: ", mailOptions);
       if (error) {
         console.log(error);
       } else {
-        console.log("Email sent: ", info.response);
+        console.log`Email sent to ${email}`
+        console.log("Email sent response: ", info.response);
       }
     });
   }
 };
 
-// runs the email outreach with 6h intervals
+// cron job runs the email outreach everyday at 09:00
 // gets data from agent
 // adds used word to usedWords.json file
 // sends emails
 const runJob = async () => {
-  schedule.scheduleJob("0 0 */6 * * *", async function () {
+  schedule.scheduleJob("0 0 18 * * *", async function () {
     const data = await queryAgent();
     let parsedArguments;
     if (data && data.function && data.function.arguments) {
@@ -138,28 +158,35 @@ const runJob = async () => {
     }
     if (parsedArguments) {
       // adds the new word to used words json file
-      let wordsCopy = usedWords;
-      wordsCopy.push(parsedArguments.wordOfTheDay);
-      const newWords = JSON.stringify(wordsCopy);
+      let wordsCopy = [...usedWords];
+      if(parsedArguments.wordOfTheDay && parsedArguments.wordOfTheDay.length > 0) {
+        // pushes to usedWords array
+        wordsCopy.push(parsedArguments.wordOfTheDay);
+      }
       try {
-        fs.writeFile("./usedWords.json", newWords, "utf8", () => {
-          console.log("Word added!");
-        });
+        if (wordsCopy.length > usedWords.length) {
+          fs.writeFile("./usedWords.json", JSON.stringify(wordsCopy), "utf8", (err) => {
+            if (err) {
+              console.error('Error writing to file:', err);
+              return;
+            }
+            console.log('Word added!');
+          });
+          sendEmails(parsedArguments);
+          console.log("Sent emails!");
+        }
       } catch (err) {
         console.log(
           "An error occurred when trying to add new used word: ",
           err
         );
       }
-
-      sendEmails(parsedArguments);
-      console.log("Sent emails!");
     }
   });
 };
 
 // the listener mainly triggers jobs and provides logs
-app.listen(3003, () => {
+app.listen(3001, () => {
   console.log("Server started!");
   runJob();
 });
