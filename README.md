@@ -11,9 +11,9 @@
 - An Express server is running locally, using Node.
 - Nodemailer is utilized to send emails to addresses, specified in an array in the `list.json` file.
 - Node-schedule is running CRON jobs and executing emails everyday at 18:00:00.
-- - Uses AI to generate word of the day, descrription and example sentences. Text is generated through OpenAI API, using a GPT-3 assistant utilizing functions.
+- Uses AI to generate word of the day, descrription and example sentences. Text is generated through OpenAI API, using a GPT-3 assistant utilizing functions.
 
-### Guide
+## Guide
 
 To successfully clone and use this repo, the following needs to be included.
 
@@ -24,3 +24,11 @@ To successfully clone and use this repo, the following needs to be included.
   - `AI_INSTRUCTIONS`
 - `list.json` file with a simple array, containing the email addresses.
 - `usedWords.json` file with a simple array with an empty string as starting point.
+
+## Resources
+- `node-mailer`: [Visit npm](https://www.npmjs.com/package/nodemailer)
+- `node-schedule`: [Visit npm](https://www.npmjs.com/package/node-schedule)
+- `OpenAI Assistants`: [Visit Assistants Documentation](https://platform.openai.com/docs/assistants/overview?lang=node.js&context=with-streaming)
+- `OpenAI Function Calling`: [Visit Function Calling Documentation](https://platform.openai.com/docs/guides/function-calling)
+
+_Cheers!
