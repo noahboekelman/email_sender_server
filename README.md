@@ -5,4 +5,4 @@
 * **Nodemailer is utilized to send emails to addresses, specified in an array in the list.json file.
 * **Node-schedule is running CRON jobs and executing emails everyday at 18:00:00.
 ---
-__ list.json and __ usedWords.json are included in .gitignore, and should be added as json files containing arrays.
+_ list.json and _ usedWords.json are included in .gitignore, and should be added as json files containing arrays.
