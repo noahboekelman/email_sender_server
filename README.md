@@ -31,4 +31,6 @@ To successfully clone and use this repo, the following needs to be included.
 - `OpenAI Assistants`: [Visit Assistants Documentation](https://platform.openai.com/docs/assistants/overview?lang=node.js&context=with-streaming)
 - `OpenAI Function Calling`: [Visit Function Calling Documentation](https://platform.openai.com/docs/guides/function-calling)
 
+#
+
 _Cheers!_
